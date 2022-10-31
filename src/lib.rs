@@ -4,28 +4,15 @@ mod parsing;
 
 use proc_macro::{TokenStream, TokenTree};
 
+use crate::parsing::pattern_parser;
+
 
 #[proc_macro]
 pub fn blarg(x : TokenStream) -> TokenStream {
-    /*let mut x = x.into_iter();
-    let z = x.next();
+    let mut z = x.into_iter();
 
-    match z.unwrap() {
-        TokenTree::Punct(p) => println!("!{}", p.as_char()),
-        _ => {},
-    }
+    pattern_parser::parse(&mut z).unwrap();
 
-    let z = x.next();
-
-    match z.unwrap() {
-        TokenTree::Punct(p) => println!("!{}", p.as_char()),
-        _ => {},
-    }*/
-
-    for w in x {
-
-        println!("~~~ {:?}", w.span());
-    }
 
     "".parse().unwrap()
 }
