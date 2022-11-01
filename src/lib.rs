@@ -2,20 +2,30 @@
 mod data;
 mod parsing;
 
+
 use proc_macro::{TokenStream, TokenTree};
 
-use crate::parsing::pattern_parser;
-
+use crate::parsing::parse;
 
 #[proc_macro]
-pub fn blarg(x : TokenStream) -> TokenStream {
-    let mut z = x.into_iter();
+pub fn ikky(x : TokenStream) -> TokenStream {
+    let y = x.into_iter().collect::<Vec<TokenTree>>().iter();
 
-    pattern_parser::parse(&mut z).unwrap();
-
+/*    pred!(comma<'a>: &'a TokenTree => char = |z| match z { TokenTree::Punct(p) => p.as_char() == ',', _ => false } => {
+        match z {
+            TokenTree::Punct(p) => p.as_char(),
+            _ => unreachable!(),
+        }
+    } );*/
+    //seq!(main<'a>: )
 
     "".parse().unwrap()
 }
 
-//#[proc_macro]
-//fn parse_pat(x : TokenStream) -> Result<
+#[proc_macro]
+pub fn blarg(x : TokenStream) -> TokenStream {
+
+
+
+    "".parse().unwrap()
+}
