@@ -6,19 +6,19 @@ use motif::*;
 use crate::data::*;
 
 pub fn parse( input : TokenStream ) -> Result<Pattern, MatchError>  {
-
-    Err(MatchError::Fatal(0))
+    let input = input.into_iter().collect::<Vec<_>>();
+    let mut input = input.iter().enumerate();
+    pattern(&mut input)
 }
 
 group!(pattern<'a>: &'a TokenTree => Pattern = |input| {
 
-    /*pred!(wild<'a>: &'a TokenTree => char = |z| match z { TokenTree::Punct(p) => p.as_char() == ',', _ => false } => {
-        match z {
-            TokenTree::Punct(p) => p.as_char(),
-            _ => unreachable!(),
-        }
-    } );*/
+    pred!(wild<'a>: &'a TokenTree => Pattern = |_x| match _x { TokenTree::Ident(n) => n.to_string() == "_", _ => false } => {
+        Pattern::Wild
+    } );
+
+    alt!(main<'a>: &'a TokenTree => Pattern = wild);
 
 
-    Err(MatchError::Fatal(0))
+    main(input)
 });
