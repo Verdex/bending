@@ -2,10 +2,10 @@
 use proc_macro::{Literal, Ident};
 
 #[derive(Debug)]
-pub enum Pattern {
+pub enum Pattern<'a> {
     Wild,
-/*    Literal(Literal),
-    List(Vec<Pattern>, Option<Box<Pattern>>), 
+    Literal(&'a Literal),
+    /*List(Vec<Pattern>, Option<Box<Pattern>>), 
     Tuple(Vec<Pattern>),
     Variable(String),
     At(String, Box<Pattern>),*/
