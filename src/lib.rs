@@ -5,7 +5,7 @@ mod parsing;
 
 use proc_macro::{TokenStream, TokenTree};
 
-use crate::parsing::parse;
+use crate::parsing::parse_object_pattern;
 
 
 #[proc_macro]

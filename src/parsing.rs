@@ -10,7 +10,7 @@ pub fn parse_object_pattern<'a>( input : (impl Iterator<Item = &'a TokenTree> + 
     object_pattern(&mut input)
 }
 
-group!(pattern<'a>: &'a TokenTree => Pattern<'a> = |input| {
+pred!(semi_colon<'a>: &'a TokenTree = |_x| match _x { TokenTree::Punct(p) => p.as_char() == ';', _ => false });
 
 group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern<'a>> = |input| {
 
@@ -31,7 +31,13 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern<'a>> = |input| {
                                                         | literal 
                                                         );
 
-    seq!(option_semi<'a>: &'a TokenTree => ObjectPattern<'a> = o <= option,  { o });
+    seq!(option_semi<'a>: &'a TokenTree => ObjectPattern<'a> = o <= option, semi_colon, { o });
+    
+    seq!(options<'a>: &'a TokenTree => Vec<ObjectPattern<'a>> = os <= * option_semi, o <= ! option, {
+        let mut os = os;
+        os.push(o);
+        os
+    });
 
-    main(input)
+    options(input)
 });
