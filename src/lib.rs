@@ -9,7 +9,7 @@ use crate::parsing::parse_object_pattern;
 
 
 #[proc_macro]
-pub fn blarg(input : TokenStream) -> TokenStream {
+pub fn object_pattern(input : TokenStream) -> TokenStream {
 
     let input = input.into_iter().collect::<Vec<_>>();
     let input = input.iter();
