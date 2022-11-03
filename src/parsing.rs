@@ -5,7 +5,7 @@ use motif::*;
 
 use crate::data::*;
 
-pub fn parse_object_pattern<'a>( input : (impl Iterator<Item = &'a TokenTree> + Clone) ) -> Result<Vec<ObjectPattern<'a>>, MatchError>  {
+pub fn parse_object_pattern<'a>( input : (impl Iterator<Item = &'a TokenTree> + Clone) ) -> Result<Vec<ObjectPattern<'a>>, MatchError> {
     let mut input = input.enumerate();
     object_pattern(&mut input)
 }
