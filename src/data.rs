@@ -2,7 +2,7 @@
 use proc_macro::{Literal, Ident};
 
 #[derive(Debug)]
-pub enum Pattern<'a> {
+pub enum ObjectPattern<'a> {
     Wild,
     Literal(&'a Literal),
     /*List(Vec<Pattern>, Option<Box<Pattern>>), 

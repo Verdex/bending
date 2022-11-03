@@ -13,7 +13,7 @@ pub fn blarg(input : TokenStream) -> TokenStream {
 
     let input = input.into_iter().collect::<Vec<_>>();
     let input = input.iter();
-    let _x = parse(input).unwrap();
+    let _x = parse_object_pattern(input).unwrap();
 
     "".parse().unwrap()
 }
