@@ -18,3 +18,26 @@ pub fn object_pattern(input : TokenStream) -> TokenStream {
     "".parse().unwrap()
 }
 
+/*
+
+Blarg(!, _); "blah" => { }
+
+let mut ret = vec![];
+match x {
+    Blarg(next_1, _) => {
+        match next_1 {
+            "blah" => ret.push( block ); // TODO is that possible?
+            _ => { } 
+        }
+         
+        match next_2 {
+            "blah" => ret.push(block);
+            _ => { }
+        }
+    },
+    _ => 
+}
+
+
+
+*/
