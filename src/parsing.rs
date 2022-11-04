@@ -58,3 +58,5 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern<'a>> = |input| {
 
     options(input)
 });
+
+//seq!()
