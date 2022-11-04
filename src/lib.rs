@@ -18,6 +18,8 @@ pub fn object_pattern(input : TokenStream) -> TokenStream {
     "".parse().unwrap()
 }
 
+//TODO: gensym
+
 /*
 
 Blarg(!, !); "blah" => { }
