@@ -16,7 +16,11 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern<'a>> = |input| {
 
     pred!(wild<'a>: &'a TokenTree => ObjectPattern<'a> = |_x| match _x { TokenTree::Ident(n) => n.to_string() == "_", _ => false } => {
         ObjectPattern::Wild
-    } );
+    });
+
+    pred!(bang<'a>: &'a TokenTree => ObjectPattern<'a> = |_x| match _x { TokenTree::Punct(p) => p.as_char() == "!", _ => false } => {
+        ObjectPattern::Next
+    });
 
     seq!(literal<'a>: &'a TokenTree => ObjectPattern<'a> = lit <= TokenTree::Literal(_), { 
         if let TokenTree::Literal(lit) = lit {
@@ -28,6 +32,7 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern<'a>> = |input| {
     });
 
     alt!(option<'a>: &'a TokenTree => ObjectPattern<'a> = wild
+                                                        | bang
                                                         | literal 
                                                         );
 

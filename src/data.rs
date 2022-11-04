@@ -4,6 +4,7 @@ use proc_macro::{Literal, Ident};
 #[derive(Debug)]
 pub enum ObjectPattern<'a> {
     Wild,
+    Next,
     Literal(&'a Literal),
     /*List(Vec<Pattern>, Option<Box<Pattern>>), 
     Tuple(Vec<Pattern>),
