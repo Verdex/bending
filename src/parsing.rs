@@ -22,6 +22,9 @@ group!(arrow<'a>: &'a TokenTree => () = |input| {
 });
 
 group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern<'a>> = |input| {
+    // TODO every pattern needs a sub !
+    // TODO except the last pattern which can't have a !
+    // TODO also wild doesn't work by itself
 
     pred!(wild<'a>: &'a TokenTree => ObjectPattern<'a> = |_x| match _x { TokenTree::Ident(n) => n.to_string() == "_", _ => false } => {
         ObjectPattern::Wild
