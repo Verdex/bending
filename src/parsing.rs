@@ -11,6 +11,15 @@ pub fn parse_object_pattern<'a>( input : (impl Iterator<Item = &'a TokenTree> + 
 }
 
 pred!(semi_colon<'a>: &'a TokenTree = |_x| match _x { TokenTree::Punct(p) => p.as_char() == ';', _ => false });
+group!(arrow<'a>: &'a TokenTree => () = |input| {
+
+    pred!(equal<'a>: &'a TokenTree = |_x| match _x { TokenTree::Punct(p) => p.as_char() == '=', _=> false });
+    pred!(greater<'a>: &'a TokenTree = |_x| match _x { TokenTree::Punct(p) => p.as_char() == '>', _=> false });
+
+    seq!(main<'a>: &'a TokenTree => () = equal, ! greater, { () });
+
+    main(input)
+});
 
 group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern<'a>> = |input| {
 
