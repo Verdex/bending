@@ -18,7 +18,7 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern<'a>> = |input| {
         ObjectPattern::Wild
     });
 
-    pred!(bang<'a>: &'a TokenTree => ObjectPattern<'a> = |_x| match _x { TokenTree::Punct(p) => p.as_char() == "!", _ => false } => {
+    pred!(bang<'a>: &'a TokenTree => ObjectPattern<'a> = |_x| match _x { TokenTree::Punct(p) => p.as_char() == '!',  _ => false } => {
         ObjectPattern::Next
     });
 
