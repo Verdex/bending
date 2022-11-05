@@ -1,5 +1,11 @@
 
-use proc_macro::{Literal, Ident};
+use proc_macro::{Literal, Ident, Group};
+
+#[derive(Debug)]
+pub struct PatternAction<T> {
+    pub pattern : T,
+    pub action : Group,
+}
 
 #[derive(Debug)]
 pub enum ObjectPattern<'a> {
