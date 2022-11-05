@@ -2,11 +2,10 @@
 mod data;
 mod parsing;
 
-use proc_macro::{TokenStream, TokenTree};
+use proc_macro::{TokenStream, TokenTree, Group};
 
 use crate::data::*;
 use crate::parsing::parse_object_pattern;
-
 
 #[proc_macro]
 pub fn object_pattern(input : TokenStream) -> TokenStream {
@@ -34,31 +33,42 @@ impl GenSym {
     }
 }
 
-fn blarg(g : &mut GenSym, input : ObjectPattern) -> String {
-    format!("
-    match ?? {{
-
-    }}
-    ")
-}
-
-fn blarg2(g : &mut GenSym, input : ObjectPattern) -> String {
-    match input {
-        ObjectPattern::Wild => "".into(),
-        ObjectPattern::Next => "".into(),
-        ObjectPattern::Literal(l) => l,
+fn obj_pat_matches(g : &mut GenSym, matchee : String, input : &mut Vec<ObjectPattern>) -> String {
+    if input.len() == 0 {
+        "todo".into()
+    }
+    else {
+        let x = input.pop().unwrap();
+        let new_matchee = g.gen(); // TODO ???
+        let n = obj_pat_matches(g, new_matchee, input);
+        format!("
+        match {m} {{
+            {pat} => {next},
+            _ => {},
+        }}
+        "
+        , pat = obj_pat_to_string(g, &x)
+        , next = n
+        , m = matchee
+        )
     }
 }
 
-fn gen_object_pattern_matcher(g : &mut GenSym, input : ObjectPattern) -> String {
+fn obj_pat_to_string(g : &mut GenSym, input : &ObjectPattern) -> String {
+    match input {
+        ObjectPattern::Wild => "_".into(),
+        ObjectPattern::Next => todo!(),
+        ObjectPattern::Literal(l) => l.clone(),
+    }
+}
+
+fn gen_object_pattern_matcher(g : &mut GenSym, mut input : Vec<ObjectPattern>, action : Group) -> String {
     format!("
     |input| {{
         let mut ret = vec![];
-        match input {{
-
-        }}
+        {}
     }}
-    ",  )
+    ", obj_pat_matches(g, "input".into(), &mut input))
 }
 
 /*

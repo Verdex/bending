@@ -1,5 +1,5 @@
 
-use proc_macro::{Literal, Ident, Group};
+use proc_macro::{Literal, Ident};
 
 #[derive(Debug)]
 pub enum ObjectPattern {
