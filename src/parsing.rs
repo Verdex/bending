@@ -5,7 +5,7 @@ use motif::*;
 
 use crate::data::*;
 
-pub fn parse_object_pattern<'a>( input : (impl Iterator<Item = &'a TokenTree> + Clone) ) -> Result<Vec<ObjectPattern<'a>>, MatchError> {
+pub fn parse_object_pattern<'a>( input : (impl Iterator<Item = &'a TokenTree> + Clone) ) -> Result<Vec<ObjectPattern>, MatchError> {
     let mut input = input.enumerate();
     object_pattern(&mut input)
 }
@@ -21,36 +21,36 @@ group!(arrow<'a>: &'a TokenTree => () = |input| {
     main(input)
 });
 
-group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern<'a>> = |input| {
+group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
     // TODO every pattern needs a sub !
     // TODO except the last pattern which can't have a !
     // TODO also wild doesn't work by itself
 
-    pred!(wild<'a>: &'a TokenTree => ObjectPattern<'a> = |_x| match _x { TokenTree::Ident(n) => n.to_string() == "_", _ => false } => {
+    pred!(wild<'a>: &'a TokenTree => ObjectPattern = |_x| match _x { TokenTree::Ident(n) => n.to_string() == "_", _ => false } => {
         ObjectPattern::Wild
     });
 
-    pred!(bang<'a>: &'a TokenTree => ObjectPattern<'a> = |_x| match _x { TokenTree::Punct(p) => p.as_char() == '!',  _ => false } => {
+    pred!(bang<'a>: &'a TokenTree => ObjectPattern = |_x| match _x { TokenTree::Punct(p) => p.as_char() == '!',  _ => false } => {
         ObjectPattern::Next
     });
 
-    seq!(literal<'a>: &'a TokenTree => ObjectPattern<'a> = lit <= TokenTree::Literal(_), { 
+    seq!(literal<'a>: &'a TokenTree => ObjectPattern = lit <= TokenTree::Literal(_), { 
         if let TokenTree::Literal(lit) = lit {
-            ObjectPattern::Literal(lit)
+            ObjectPattern::Literal(lit.to_string())
         }
         else {
             unreachable!()
         }
     });
 
-    alt!(option<'a>: &'a TokenTree => ObjectPattern<'a> = wild
-                                                        | bang
-                                                        | literal 
-                                                        );
+    alt!(option<'a>: &'a TokenTree => ObjectPattern = wild
+                                                    | bang
+                                                    | literal 
+                                                    );
 
-    seq!(option_semi<'a>: &'a TokenTree => ObjectPattern<'a> = o <= option, semi_colon, { o });
+    seq!(option_semi<'a>: &'a TokenTree => ObjectPattern = o <= option, semi_colon, { o });
     
-    seq!(options<'a>: &'a TokenTree => Vec<ObjectPattern<'a>> = os <= * option_semi, o <= ! option, {
+    seq!(options<'a>: &'a TokenTree => Vec<ObjectPattern> = os <= * option_semi, o <= ! option, {
         let mut os = os;
         os.push(o);
         os

@@ -2,16 +2,10 @@
 use proc_macro::{Literal, Ident, Group};
 
 #[derive(Debug)]
-pub struct PatternAction<T> {
-    pub pattern : T,
-    pub action : Group,
-}
-
-#[derive(Debug)]
-pub enum ObjectPattern<'a> {
+pub enum ObjectPattern {
     Wild,
     Next,
-    Literal(&'a Literal),
+    Literal(String),
     /*List(Vec<Pattern>, Option<Box<Pattern>>), 
     Tuple(Vec<Pattern>),
     Variable(String),

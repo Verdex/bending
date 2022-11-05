@@ -34,10 +34,32 @@ impl GenSym {
     }
 }
 
-fn gen_object_pattern_matcher<'a>(input : PatternAction<ObjectPattern<'a>>) -> String {
-    todo!()
+fn blarg(g : &mut GenSym, input : ObjectPattern) -> String {
+    format!("
+    match ?? {{
+
+    }}
+    ")
 }
-//TODO: gensym
+
+fn blarg2(g : &mut GenSym, input : ObjectPattern) -> String {
+    match input {
+        ObjectPattern::Wild => "".into(),
+        ObjectPattern::Next => "".into(),
+        ObjectPattern::Literal(l) => l,
+    }
+}
+
+fn gen_object_pattern_matcher(g : &mut GenSym, input : ObjectPattern) -> String {
+    format!("
+    |input| {{
+        let mut ret = vec![];
+        match input {{
+
+        }}
+    }}
+    ",  )
+}
 
 /*
 
