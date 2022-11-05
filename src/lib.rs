@@ -18,6 +18,25 @@ pub fn object_pattern(input : TokenStream) -> TokenStream {
     "".parse().unwrap()
 }
 
+struct GenSym {
+    index : u64,
+}
+
+impl GenSym {
+    fn new() -> Self {
+        GenSym { index: 0 }
+    }
+
+    fn gen(&mut self) -> String {
+        let ret = format!("gen_sym_{}", self.index);
+        self.index += 1;
+        ret
+    }
+}
+
+fn gen_object_pattern_matcher<'a>(input : PatternAction<ObjectPattern<'a>>) -> String {
+    todo!()
+}
 //TODO: gensym
 
 /*
