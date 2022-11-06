@@ -12,6 +12,7 @@ pub enum ObjectPattern {
     Wild,
     Next,
     Literal(String),
+    Ident(String),
     /*List(Vec<Pattern>, Option<Box<Pattern>>), 
     Tuple(Vec<Pattern>),
     Variable(String),
@@ -24,6 +25,7 @@ impl<'a> Linearizable<'a> for ObjectPattern {
             ObjectPattern::Wild => vec![],
             ObjectPattern::Next => vec![],
             ObjectPattern::Literal(_) => vec![],
+            ObjectPattern::Ident(_) => vec![],
         }
     }
 }
