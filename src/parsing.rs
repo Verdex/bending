@@ -2,12 +2,28 @@
 use proc_macro::{TokenStream, TokenTree};
 
 use motif::*;
+use denest::*;
 
 use crate::data::*;
 
 pub fn parse_object_pattern<'a>( input : (impl Iterator<Item = &'a TokenTree> + Clone) ) -> Result<Vec<ObjectPattern>, MatchError> {
+    pred!(not_zero: usize = |_x| _x != 0);
+    seq!(legit_sequence: usize => () = * not_zero, 0, { () });
+
     let mut input = input.enumerate();
-    object_pattern(&mut input)
+    let pats = object_pattern(&mut input)?;
+    if input.count() != 0 {
+        return Err(MatchError::FatalEndOfFile);
+    }
+
+    let mut next_counts = pats.iter().map(|pat| pat.to_lax().filter(|x| matches!(x, ObjectPattern::Next)).count()).enumerate();
+
+    legit_sequence(&mut next_counts)?;
+    if next_counts.count() != 0 {
+        return Err(MatchError::FatalEndOfFile);
+    }
+
+    Ok(pats)
 }
 
 pred!(semi_colon<'a>: &'a TokenTree = |_x| match _x { TokenTree::Punct(p) => p.as_char() == ';', _ => false });
@@ -43,14 +59,16 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
         }
     });
 
-    alt!(option<'a>: &'a TokenTree => ObjectPattern = wild
-                                                    | bang
-                                                    | literal 
-                                                    );
+    alt!(last_option<'a>: &'a TokenTree => ObjectPattern = wild
+                                                         | literal 
+                                                         );
 
-    seq!(option_semi<'a>: &'a TokenTree => ObjectPattern = o <= option, semi_colon, { o });
+    alt!(leading_option<'a>: &'a TokenTree => ObjectPattern = bang
+                                                            );
+
+    seq!(option_semi<'a>: &'a TokenTree => ObjectPattern = o <= leading_option, semi_colon, { o });
     
-    seq!(options<'a>: &'a TokenTree => Vec<ObjectPattern> = os <= * option_semi, o <= ! option, {
+    seq!(options<'a>: &'a TokenTree => Vec<ObjectPattern> = os <= * option_semi, o <= ! last_option, {
         let mut os = os;
         os.push(o);
         os
