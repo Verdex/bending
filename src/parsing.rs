@@ -73,5 +73,3 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
 
     options(input)
 });
-
-//seq!()
