@@ -1,6 +1,7 @@
 
 mod data;
 mod parsing;
+mod gen;
 
 use proc_macro::TokenStream;
 
