@@ -74,7 +74,7 @@ fn gen_object_pattern_matcher(g : &mut GenSym, input : ObjPatsAct) -> String {
         let prev_names = 
             match prev_pat {
                 Some(p) => p.to_lax().filter(|x| matches!(x, ObjectPattern::Next)).map(|_| g.gen()).collect::<Vec<String>>(),
-                None => vec!["input".into()],
+                None => vec!["gen_sym_input".into()],
             };
 
         let cur_pat_as_string = obj_pat_to_string(cur_pat.as_ref().unwrap(), cur_names);
@@ -84,7 +84,7 @@ fn gen_object_pattern_matcher(g : &mut GenSym, input : ObjPatsAct) -> String {
     }
 
     format!("
-    |input| {{
+    |gen_sym_input| {{
         let mut ret = vec![];
         {}
         ret
