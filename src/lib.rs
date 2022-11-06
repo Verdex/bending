@@ -59,23 +59,27 @@ fn obj_pat_to_string(input : &ObjectPattern, mut next_names : Vec<String>) -> St
         ObjectPattern::Wild => "_".into(),
         ObjectPattern::Next => next_names.pop().expect("ran out of next_names while building object pattern").into(),
         ObjectPattern::Literal(l) => l.clone(),
-        ObjectPattern::Ident(n) => n.clone(),
     }
 }
 
 fn gen_object_pattern_matcher(g : &mut GenSym, input : ObjPatsAct) -> String {
-    let ObjPatsAct { mut obj_pats, action } = input;
+    let ObjPatsAct { obj_pats, action } = input;
+    let mut obj_pats = obj_pats.into_iter().map(|x| Some(x)).collect::<Vec<_>>();
     obj_pats.reverse();
+    obj_pats.push(None);
     let (mut names, mut next) : (Vec<String>, String) = (vec![], format!( "{{ ret.push( {} ); }}", action.to_string() ));
-    for (cur_pat, prev_pat) in 
-        obj_pats.iter()
-                .zip(obj_pats.iter().skip(1)/*.chain(std::iter::once(&ObjectPattern::Ident("input".into())))*/)
-    {
+    for (cur_pat, prev_pat) in obj_pats.iter().zip(obj_pats.iter().skip(1)) {
 
         let cur_names = names;
-        let prev_names = prev_pat.to_lax().filter(|x| matches!(x, ObjectPattern::Next)).map(|_| g.gen()).collect::<Vec<String>>();
-        let cur_pat_as_string = obj_pat_to_string(cur_pat, cur_names);
+        let prev_names = 
+            match prev_pat {
+                Some(p) => p.to_lax().filter(|x| matches!(x, ObjectPattern::Next)).map(|_| g.gen()).collect::<Vec<String>>(),
+                None => vec!["input".into()],
+            };
+
+        let cur_pat_as_string = obj_pat_to_string(cur_pat.as_ref().unwrap(), cur_names);
         next = obj_pat_match(cur_pat_as_string, next, &prev_names);
+        println!("next = {}", next);
         names = prev_names;
     }
 
