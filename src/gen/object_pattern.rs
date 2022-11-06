@@ -1,5 +1,5 @@
 
-use denest::*; // TODO
+use denest::*; 
 
 use crate::data::*;
 
@@ -42,7 +42,7 @@ pub fn object_pattern_matcher(g : &mut GenSym, input : ObjPatsAct) -> String {
 
         let cur_pat_as_string = obj_pat_to_string(cur_pat.as_ref().unwrap(), cur_names);
         next = obj_pat_match(cur_pat_as_string, next, &prev_names);
-        println!("next = {}", next);
+        println!("next = {}", next); // TODO:  remove
         names = prev_names;
     }
 
