@@ -1,6 +1,8 @@
 
 use proc_macro::{Literal, Ident};
 
+use denest::*;
+
 #[derive(Debug)]
 pub enum ObjectPattern {
     Wild,
@@ -10,6 +12,16 @@ pub enum ObjectPattern {
     Tuple(Vec<Pattern>),
     Variable(String),
     At(String, Box<Pattern>),*/
+}
+
+impl<'a> Linearizable<'a> for ObjectPattern {
+    fn l_next(&'a self) -> Vec<&'a Self> {
+        match self {
+            ObjectPattern::Wild => vec![],
+            ObjectPattern::Next => vec![],
+            ObjectPattern::Literal(_) => vec![],
+        }
+    }
 }
 
 /*
