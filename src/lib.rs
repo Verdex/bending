@@ -23,3 +23,4 @@ pub fn object_pattern(input : TokenStream) -> TokenStream {
 
     o.parse().unwrap()
 }
+
