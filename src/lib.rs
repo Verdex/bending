@@ -2,7 +2,7 @@
 mod data;
 mod parsing;
 
-use proc_macro::{TokenStream, TokenTree, Group};
+use proc_macro::TokenStream;
 
 use crate::data::*;
 use crate::parsing::parse_object_pattern;

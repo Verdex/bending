@@ -1,6 +1,4 @@
 
-use proc_macro::{Literal, Ident};
-
 use denest::*;
 
 #[derive(Debug)]

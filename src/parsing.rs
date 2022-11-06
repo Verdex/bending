@@ -1,5 +1,5 @@
 
-use proc_macro::{TokenStream, TokenTree};
+use proc_macro::TokenTree;
 
 use motif::*;
 use denest::*;
