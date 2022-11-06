@@ -6,7 +6,7 @@ mod gen;
 use proc_macro::TokenStream;
 
 use crate::data::GenSym;
-use crate::parsing::parse_object_pattern;
+use crate::parsing::object_pattern::parse_object_pattern;
 use crate::gen::object_pattern::object_pattern_matcher;
 
 #[proc_macro]
