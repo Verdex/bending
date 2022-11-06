@@ -33,42 +33,47 @@ impl GenSym {
     }
 }
 
-fn obj_pat_matches(g : &mut GenSym, matchee : String, input : &mut Vec<ObjectPattern>) -> String {
-    if input.len() == 0 {
-        "todo".into()
-    }
-    else {
-        let x = input.pop().unwrap();
-        let new_matchee = g.gen(); // TODO ???
-        let n = obj_pat_matches(g, new_matchee, input);
+use denest::*; // TODO
+
+fn obj_pat_match(pat : String, next : String, prev_names : &Vec<String>) -> String {
+    prev_names.iter().map(|prev_name| 
         format!("
-        match {m} {{
+        match {name} {{
             {pat} => {next},
             _ => {},
         }}
         "
-        , pat = obj_pat_to_string(g, &x)
-        , next = n
-        , m = matchee
-        )
-    }
+        , name = prev_name
+        , pat = pat
+        , next = next
+        )).collect::<String>()
 }
 
-fn obj_pat_to_string(g : &mut GenSym, input : &ObjectPattern) -> String {
+fn obj_pat_to_string(input : &ObjectPattern, mut next_names : Vec<String>) -> String {
     match input {
         ObjectPattern::Wild => "_".into(),
-        ObjectPattern::Next => todo!(),
+        ObjectPattern::Next => next_names.pop().expect("ran out of next_names while building object pattern").into(),
         ObjectPattern::Literal(l) => l.clone(),
     }
 }
 
 fn gen_object_pattern_matcher(g : &mut GenSym, mut input : Vec<ObjectPattern>, action : Group) -> String {
+    input.reverse();
+    let (mut names, mut next) : (Vec<String>, String) = (vec![], format!( "ret.push( {} );", action.to_string() ));
+    for (cur_pat, prev_pat) in input.iter().zip(input.iter().skip(1)) {
+        let cur_names = names;
+        let prev_names = prev_pat.to_lax().filter(|x| matches!(x, ObjectPattern::Next)).map(|_| g.gen()).collect::<Vec<String>>();
+        let cur_pat_as_string = obj_pat_to_string(cur_pat, cur_names);
+        next = obj_pat_match(cur_pat_as_string, next, &prev_names);
+        names = prev_names;
+    }
+
     format!("
     |input| {{
         let mut ret = vec![];
         {}
     }}
-    ", obj_pat_matches(g, "input".into(), &mut input))
+    ", next)
 }
 
 /*
