@@ -37,6 +37,12 @@ group!(arrow<'a>: &'a TokenTree => () = |input| {
     main(input)
 });
 
+group!(colon_colon<'a>: &'a TokenTree => () = |input| {
+    pred!(colon<'a>: &'a TokenTree = |_x| match _x { TokenTree::Punct(p) => p.as_char() == ':', _ => false });
+    seq!(main<'a>: &'a TokenTree => () = colon, ! colon, { () });
+    main(input)
+});
+
 group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
 
     pred!(wild<'a>: &'a TokenTree => ObjectPattern = |_x| match _x { TokenTree::Ident(n) => n.to_string() == "_", _ => false } => {
@@ -55,6 +61,13 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
             unreachable!()
         }
     });
+
+    //seq!(type_usage<'a>: &'a TokenTree => ObjectPattern = )
+
+    alt!(internal_option<'a>: &'a TokenTree => ObjectPattern = wild
+                                                             | literal 
+                                                             | bang
+                                                             );
 
     alt!(last_option<'a>: &'a TokenTree => ObjectPattern = wild
                                                          | literal 

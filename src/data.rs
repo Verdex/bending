@@ -12,7 +12,7 @@ pub enum ObjectPattern {
     Wild,
     Next,
     Literal(String),
-    Cons { namespaces : Vec<String>, cons : String, params : Vec<ObjectPattern> },
+    Cons { cons : String, params : Vec<ObjectPattern> },
     /*List(Vec<Pattern>, Option<Box<Pattern>>), 
     Tuple(Vec<Pattern>),
     Variable(String),
