@@ -4,6 +4,12 @@ use proc_macro::{Literal, Ident};
 use denest::*;
 
 #[derive(Debug)]
+pub struct ObjPatsAct {
+    pub obj_pats : Vec<ObjectPattern>,
+    pub action : String,
+}
+
+#[derive(Debug)]
 pub enum ObjectPattern {
     Wild,
     Next,

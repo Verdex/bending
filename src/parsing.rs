@@ -6,17 +6,17 @@ use denest::*;
 
 use crate::data::*;
 
-pub fn parse_object_pattern<'a>( input : (impl Iterator<Item = &'a TokenTree> + Clone) ) -> Result<Vec<ObjectPattern>, MatchError> {
+pub fn parse_object_pattern<'a>( input : (impl Iterator<Item = &'a TokenTree> + Clone) ) -> Result<ObjPatsAct, MatchError> {
     pred!(not_zero: usize = |_x| _x != 0);
     seq!(legit_sequence: usize => () = * not_zero, 0, { () });
 
     let mut input = input.enumerate();
-    let pats = object_pattern(&mut input)?;
+    let pats = obj_pat_with_action(&mut input)?;
     if input.count() != 0 {
         return Err(MatchError::FatalEndOfFile);
     }
 
-    let mut next_counts = pats.iter().map(|pat| pat.to_lax().filter(|x| matches!(x, ObjectPattern::Next)).count()).enumerate();
+    let mut next_counts = pats.obj_pats.iter().map(|pat| pat.to_lax().filter(|x| matches!(x, ObjectPattern::Next)).count()).enumerate();
 
     legit_sequence(&mut next_counts)?;
     if next_counts.count() != 0 {
@@ -73,3 +73,13 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
 
     options(input)
 });
+
+seq!(obj_pat_with_action<'a>: &'a TokenTree => ObjPatsAct 
+    = obj_pats <= object_pattern, arrow, g <= TokenTree::Group(_), { 
+        if let TokenTree::Group(g) = g {
+            ObjPatsAct { obj_pats, action : g.to_string() }
+        }
+        else {
+            unreachable!();
+        }
+    });
