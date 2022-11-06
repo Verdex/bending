@@ -28,6 +28,22 @@ impl<'a> Linearizable<'a> for ObjectPattern {
     }
 }
 
+pub struct GenSym {
+    index : u64,
+}
+
+impl GenSym {
+    pub fn new() -> Self {
+        GenSym { index: 0 }
+    }
+
+    pub fn gen(&mut self) -> String {
+        let ret = format!("gen_sym_{}", self.index);
+        self.index += 1;
+        ret
+    }
+}
+
 /*
 
 it sounds like negative literals are punct + literal and then even sometimes group ( punct + literal )
