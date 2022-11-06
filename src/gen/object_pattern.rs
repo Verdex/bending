@@ -22,6 +22,7 @@ fn obj_pat_to_string(input : &ObjectPattern, mut next_names : Vec<String>) -> St
         ObjectPattern::Wild => "_".into(),
         ObjectPattern::Next => next_names.pop().expect("ran out of next_names while building object pattern").into(),
         ObjectPattern::Literal(l) => l.clone(),
+        ObjectPattern::Cons { .. } => todo!(),
     }
 }
 

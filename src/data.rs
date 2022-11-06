@@ -12,10 +12,11 @@ pub enum ObjectPattern {
     Wild,
     Next,
     Literal(String),
-    Cons { namespaces : Vec<String>, cons : String, params : Vec<String> },
+    Cons { namespaces : Vec<String>, cons : String, params : Vec<ObjectPattern> },
     /*List(Vec<Pattern>, Option<Box<Pattern>>), 
     Tuple(Vec<Pattern>),
     Variable(String),
+    structure
     At(String, Box<Pattern>),*/
 }
 
@@ -25,6 +26,7 @@ impl<'a> Linearizable<'a> for ObjectPattern {
             ObjectPattern::Wild => vec![],
             ObjectPattern::Next => vec![],
             ObjectPattern::Literal(_) => vec![],
+            ObjectPattern::Cons { params, .. } => params.iter().collect::<Vec<_>>(),
         }
     }
 }
