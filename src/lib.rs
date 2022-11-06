@@ -12,7 +12,12 @@ pub fn object_pattern(input : TokenStream) -> TokenStream {
 
     let input = input.into_iter().collect::<Vec<_>>();
     let input = input.iter();
-    let _x = parse_object_pattern(input).unwrap();
+    let x = parse_object_pattern(input).unwrap();
+
+    let mut g = GenSym::new();
+
+    let o = gen_object_pattern_matcher(&mut g, x, "action".into());
+    println!("output = {}", o);
 
     "".parse().unwrap()
 }
@@ -40,7 +45,7 @@ fn obj_pat_match(pat : String, next : String, prev_names : &Vec<String>) -> Stri
         format!("
         match {name} {{
             {pat} => {next},
-            _ => {},
+            _ => {{}},
         }}
         "
         , name = prev_name
@@ -57,9 +62,9 @@ fn obj_pat_to_string(input : &ObjectPattern, mut next_names : Vec<String>) -> St
     }
 }
 
-fn gen_object_pattern_matcher(g : &mut GenSym, mut input : Vec<ObjectPattern>, action : Group) -> String {
+fn gen_object_pattern_matcher(g : &mut GenSym, mut input : Vec<ObjectPattern>, action : String) -> String {
     input.reverse();
-    let (mut names, mut next) : (Vec<String>, String) = (vec![], format!( "ret.push( {} );", action.to_string() ));
+    let (mut names, mut next) : (Vec<String>, String) = (vec![], format!( "{{ ret.push( {} ); }}", action.to_string() ));
     for (cur_pat, prev_pat) in input.iter().zip(input.iter().skip(1)) {
         let cur_names = names;
         let prev_names = prev_pat.to_lax().filter(|x| matches!(x, ObjectPattern::Next)).map(|_| g.gen()).collect::<Vec<String>>();
