@@ -120,10 +120,19 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
         }
         else {
             let mut input = input.iter().enumerate();
-
             pat_list(&mut input)
         }
     });
+
+    seq!(cons_with_param<'a>: &'a TokenTree => ObjectPattern = tag <= cons_tag, tup <= tuple, {
+        ObjectPattern::Cons { cons: tag, params: tup }
+    });
+
+    seq!(cons_alone<'a>: &'a TokenTree => ObjectPattern = tag <= cons_tag, {
+        ObjectPattern::Cons { cons: tag, params: vec![] }
+    });
+
+    alt!(cons<'a>: &'a TokenTree => ObjectPattern = cons_with_param | cons_alone);
 
     alt!(internal_option<'a>: &'a TokenTree => ObjectPattern = wild
                                                              | literal 
