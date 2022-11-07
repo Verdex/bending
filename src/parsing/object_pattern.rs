@@ -1,5 +1,5 @@
 
-use proc_macro::TokenTree;
+use proc_macro::{TokenStream, TokenTree, Delimiter};
 
 use motif::*;
 use denest::*;
@@ -87,10 +87,42 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
     });
 
     seq!(pat_comma<'a>: &'a TokenTree => ObjectPattern = pat <= internal_option, comma, { pat });
-    seq!(params<'a>: &'a TokenTree => Vec<ObjectPattern> = first <= * pat_comma, last <= ! internal_option, {
+    seq!(pat_list<'a>: &'a TokenTree => Vec<ObjectPattern> = first <= * pat_comma, last <= ! internal_option, {
         let mut first = first;
         first.push(last);
         first
+    });
+
+    group!(tuple<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
+        seq!(extract<'a>: &'a TokenTree => Option<TokenStream> = group <= TokenTree::Group(_), {
+            if let TokenTree::Group(g) = group {
+                if g.delimiter() == Delimiter::Parenthesis {
+                    Some(g.stream())
+                }
+                else {
+                    None
+                }
+            }
+            else { 
+                unreachable!();
+            }
+        });
+
+        let group = match extract(input)? {
+            Some(g) => g,
+            None => { return Err(MatchError::FatalEndOfFile); },
+        };
+
+        let input = group.into_iter().collect::<Vec<TokenTree>>();
+
+        if input.len() == 0 {
+            Ok(vec![])
+        }
+        else {
+            let mut input = input.iter().enumerate();
+
+            pat_list(&mut input)
+        }
     });
 
     alt!(internal_option<'a>: &'a TokenTree => ObjectPattern = wild
