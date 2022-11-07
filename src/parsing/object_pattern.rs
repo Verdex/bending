@@ -7,7 +7,7 @@ use denest::*;
 use crate::data::*;
 
 pub fn parse_object_pattern<'a>( input : (impl Iterator<Item = &'a TokenTree> + Clone) ) -> Result<ObjPatsAct, MatchError> {
-    pred!(not_zero: usize = |_x| _x != 0);
+    pred!(not_zero: usize = |x| x != 0);
     seq!(legit_sequence: usize => () = * not_zero, 0, { () });
 
     let mut input = input.enumerate();
@@ -26,11 +26,11 @@ pub fn parse_object_pattern<'a>( input : (impl Iterator<Item = &'a TokenTree> + 
     Ok(pats)
 }
 
-pred!(semi_colon<'a>: &'a TokenTree = |_x| match _x { TokenTree::Punct(p) => p.as_char() == ';', _ => false });
+pred!(semi_colon<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == ';', _ => false });
 group!(arrow<'a>: &'a TokenTree => () = |input| {
 
-    pred!(equal<'a>: &'a TokenTree = |_x| match _x { TokenTree::Punct(p) => p.as_char() == '=', _=> false });
-    pred!(greater<'a>: &'a TokenTree = |_x| match _x { TokenTree::Punct(p) => p.as_char() == '>', _=> false });
+    pred!(equal<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '=', _=> false });
+    pred!(greater<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '>', _=> false });
 
     seq!(main<'a>: &'a TokenTree => () = equal, ! greater, { () });
 
@@ -38,18 +38,18 @@ group!(arrow<'a>: &'a TokenTree => () = |input| {
 });
 
 group!(colon_colon<'a>: &'a TokenTree => () = |input| {
-    pred!(colon<'a>: &'a TokenTree = |_x| match _x { TokenTree::Punct(p) => p.as_char() == ':', _ => false });
+    pred!(colon<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == ':', _ => false });
     seq!(main<'a>: &'a TokenTree => () = colon, ! colon, { () });
     main(input)
 });
 
 group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
 
-    pred!(wild<'a>: &'a TokenTree => ObjectPattern = |_x| match _x { TokenTree::Ident(n) => n.to_string() == "_", _ => false } => {
+    pred!(wild<'a>: &'a TokenTree => ObjectPattern = |x| match x { TokenTree::Ident(n) => n.to_string() == "_", _ => false } => {
         ObjectPattern::Wild
     });
 
-    pred!(bang<'a>: &'a TokenTree => ObjectPattern = |_x| match _x { TokenTree::Punct(p) => p.as_char() == '!',  _ => false } => {
+    pred!(bang<'a>: &'a TokenTree => ObjectPattern = |x| match x { TokenTree::Punct(p) => p.as_char() == '!',  _ => false } => {
         ObjectPattern::Next
     });
 
