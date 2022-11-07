@@ -26,20 +26,21 @@ pub fn parse_object_pattern<'a>( input : (impl Iterator<Item = &'a TokenTree> + 
     Ok(pats)
 }
 
+pred!(comma<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == ',', _ => false });
 pred!(semi_colon<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == ';', _ => false });
 group!(arrow<'a>: &'a TokenTree => () = |input| {
 
-    pred!(equal<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '=', _=> false });
-    pred!(greater<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '>', _=> false });
+    pred!(equal<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '=', _ => false });
+    pred!(greater<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '>', _ => false });
 
     seq!(main<'a>: &'a TokenTree => () = equal, ! greater, { () });
 
     main(input)
 });
 
-group!(colon_colon<'a>: &'a TokenTree => () = |input| {
+group!(colon_colon<'a>: &'a TokenTree => &'static str = |input| {
     pred!(colon<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == ':', _ => false });
-    seq!(main<'a>: &'a TokenTree => () = colon, ! colon, { () });
+    seq!(main<'a>: &'a TokenTree => &'static str = colon, ! colon, { "::" });
     main(input)
 });
 
@@ -62,7 +63,35 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
         }
     });
 
-    //seq!(type_usage<'a>: &'a TokenTree => ObjectPattern = )
+    seq!(ident_colon_colon<'a>: &'a TokenTree => String = ident <= TokenTree::Ident(_), colon_colon, {
+        if let TokenTree::Ident(i) = ident {
+            format!( "{}{}", i.to_string(), "::" )
+        }
+        else {
+            unreachable!();
+        }
+    });
+
+    seq!(cons_tag<'a>: &'a TokenTree => String = prefix <= ? colon_colon
+                                               , body <= * ident_colon_colon
+                                               , last <= TokenTree::Ident(_)
+                                               , {
+        if let TokenTree::Ident(i) = last {
+            format!( "{}{}{}", prefix.or(Some("")).unwrap()
+                             , body.into_iter().collect::<String>()
+                             , i.to_string() )
+        }
+        else {
+            unreachable!();
+        }
+    });
+
+    seq!(pat_comma<'a>: &'a TokenTree => ObjectPattern = pat <= internal_option, comma, { pat });
+    seq!(params<'a>: &'a TokenTree => Vec<ObjectPattern> = first <= * pat_comma, last <= ! internal_option, {
+        let mut first = first;
+        first.push(last);
+        first
+    });
 
     alt!(internal_option<'a>: &'a TokenTree => ObjectPattern = wild
                                                              | literal 
