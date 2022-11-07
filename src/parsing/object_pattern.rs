@@ -86,14 +86,14 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
         }
     });
 
-    seq!(pat_comma<'a>: &'a TokenTree => ObjectPattern = pat <= internal_option, comma, { pat });
-    seq!(pat_list<'a>: &'a TokenTree => Vec<ObjectPattern> = first <= * pat_comma, last <= ! internal_option, {
-        let mut first = first;
-        first.push(last);
-        first
-    });
-
     group!(tuple<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
+        seq!(pat_comma<'a>: &'a TokenTree => ObjectPattern = pat <= internal_option, comma, { pat });
+        seq!(pat_list<'a>: &'a TokenTree => Vec<ObjectPattern> = first <= * pat_comma, last <= ! internal_option, {
+            let mut first = first;
+            first.push(last);
+            first
+        });
+
         seq!(extract<'a>: &'a TokenTree => Option<TokenStream> = group <= TokenTree::Group(_), {
             if let TokenTree::Group(g) = group {
                 if g.delimiter() == Delimiter::Parenthesis {
@@ -137,13 +137,16 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
     alt!(internal_option<'a>: &'a TokenTree => ObjectPattern = wild
                                                              | literal 
                                                              | bang
+                                                             | cons
                                                              );
 
     alt!(last_option<'a>: &'a TokenTree => ObjectPattern = wild
                                                          | literal 
+                                                         | cons
                                                          );
 
     alt!(leading_option<'a>: &'a TokenTree => ObjectPattern = bang
+                                                            | cons
                                                             );
 
     seq!(option_semi<'a>: &'a TokenTree => ObjectPattern = o <= leading_option, semi_colon, { o });
