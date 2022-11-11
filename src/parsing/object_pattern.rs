@@ -44,6 +44,12 @@ group!(colon_colon<'a>: &'a TokenTree => &'static str = |input| {
     main(input)
 });
 
+group!(dot_dot<'a>: &'a TokenTree => ObjectPattern = |input| {
+    pred!(dot<'a>:&'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '.', _ => false });
+    seq!(main<'a>: &'a TokenTree => ObjectPattern = dot, ! dot, { ObjectPattern::Rest });
+    main(input)
+});
+
 group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
 
     pred!(wild<'a>: &'a TokenTree => ObjectPattern = |x| match x { TokenTree::Ident(n) => n.to_string() == "_", _ => false } => {
@@ -86,9 +92,10 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
         }
     });
 
-    group!(tuple<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
-        seq!(pat_comma<'a>: &'a TokenTree => ObjectPattern = pat <= internal_option, comma, { pat });
-        seq!(pat_list<'a>: &'a TokenTree => Vec<ObjectPattern> = first <= * pat_comma, last <= ! internal_option, {
+    group!(params<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
+        alt!(opts<'a>: &'a TokenTree => ObjectPattern = internal_option | dot_dot);
+        seq!(pat_comma<'a>: &'a TokenTree => ObjectPattern = pat <= opts, comma, { pat });
+        seq!(pat_list<'a>: &'a TokenTree => Vec<ObjectPattern> = first <= * pat_comma, last <= ! opts, {
             let mut first = first;
             first.push(last);
             first
@@ -124,7 +131,9 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
         }
     });
 
-    seq!(cons_with_param<'a>: &'a TokenTree => ObjectPattern = tag <= cons_tag, ps <= tuple, {
+    seq!(tuple<'a>: &'a TokenTree => ObjectPattern = ps <= params, { println!("blarg"); ObjectPattern::Tuple(ps) });
+
+    seq!(cons_with_param<'a>: &'a TokenTree => ObjectPattern = tag <= cons_tag, ps <= params, {
         ObjectPattern::Cons { cons: tag, params: ps }
     });
 
@@ -138,6 +147,7 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
                                                              | literal 
                                                              | bang
                                                              | cons
+                                                             | tuple
                                                              );
 
     alt!(last_option<'a>: &'a TokenTree => ObjectPattern = wild

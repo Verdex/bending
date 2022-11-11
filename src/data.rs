@@ -10,11 +10,12 @@ pub struct ObjPatsAct {
 #[derive(Debug)]
 pub enum ObjectPattern {
     Wild,
+    Rest,
     Next,
     Literal(String),
     Cons { cons : String, params : Vec<ObjectPattern> },
+    Tuple(Vec<ObjectPattern>),
     /*List(Vec<Pattern>, Option<Box<Pattern>>), 
-    Tuple(Vec<Pattern>),
     structure
     At(String, Box<Pattern>),*/
 }
@@ -23,9 +24,11 @@ impl<'a> Linearizable<'a> for ObjectPattern {
     fn l_next(&'a self) -> Vec<&'a Self> {
         match self {
             ObjectPattern::Wild => vec![],
+            ObjectPattern::Rest => vec![],
             ObjectPattern::Next => vec![],
             ObjectPattern::Literal(_) => vec![],
             ObjectPattern::Cons { params, .. } => params.iter().collect::<Vec<_>>(),
+            ObjectPattern::Tuple ( params ) => params.iter().collect::<Vec<_>>(),
         }
     }
 }
