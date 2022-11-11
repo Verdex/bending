@@ -15,7 +15,6 @@ pub enum ObjectPattern {
     Cons { cons : String, params : Vec<ObjectPattern> },
     /*List(Vec<Pattern>, Option<Box<Pattern>>), 
     Tuple(Vec<Pattern>),
-    Variable(String),
     structure
     At(String, Box<Pattern>),*/
 }
