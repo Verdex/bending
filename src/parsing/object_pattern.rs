@@ -86,7 +86,7 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
         }
     });
 
-    group!(params<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
+    group!(tuple<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
         seq!(pat_comma<'a>: &'a TokenTree => ObjectPattern = pat <= internal_option, comma, { pat });
         seq!(pat_list<'a>: &'a TokenTree => Vec<ObjectPattern> = first <= * pat_comma, last <= ! internal_option, {
             let mut first = first;
@@ -124,7 +124,7 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
         }
     });
 
-    seq!(cons_with_param<'a>: &'a TokenTree => ObjectPattern = tag <= cons_tag, ps <= params, {
+    seq!(cons_with_param<'a>: &'a TokenTree => ObjectPattern = tag <= cons_tag, ps <= tuple, {
         ObjectPattern::Cons { cons: tag, params: ps }
     });
 
