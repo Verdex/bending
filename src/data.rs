@@ -62,28 +62,18 @@ going to be potentially returning the same inner parts of the data many times
         so mutating it isn't going to be an option
 
 match _ {
-    1 => 
     1 | 2 => 
     1..2 =>
     1..=2 =>
-    a =>
     a @ _ =>
-    Blah =>
-    Blah(P) =>
-    Blah(P, ..) => ??
     Blah { a : P } => 
     Blah { a : P, .. } => 
     [] =>
     [P, P] => 
     [P, ..] =>
     [P, a @ ..] =>
-    A::B => (and etc)
-    () => ??
-    (a, b) =>
-    (a, .., b) =>
     P if pred =>
     & name =>
-    ! =>
     ! & name =>
 }
 
