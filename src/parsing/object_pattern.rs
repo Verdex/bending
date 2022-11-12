@@ -131,7 +131,7 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
         }
     });
 
-    seq!(tuple<'a>: &'a TokenTree => ObjectPattern = ps <= params, { println!("blarg"); ObjectPattern::Tuple(ps) });
+    seq!(tuple<'a>: &'a TokenTree => ObjectPattern = ps <= params, { ObjectPattern::Tuple(ps) });
 
     seq!(cons_with_param<'a>: &'a TokenTree => ObjectPattern = tag <= cons_tag, ps <= params, {
         ObjectPattern::Cons { cons: tag, params: ps }
@@ -153,10 +153,12 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
     alt!(last_option<'a>: &'a TokenTree => ObjectPattern = wild
                                                          | literal 
                                                          | cons
+                                                         | tuple
                                                          );
 
     alt!(leading_option<'a>: &'a TokenTree => ObjectPattern = bang
                                                             | cons
+                                                            | tuple
                                                             );
 
     seq!(option_semi<'a>: &'a TokenTree => ObjectPattern = o <= leading_option, semi_colon, { o });
