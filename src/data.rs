@@ -15,9 +15,9 @@ pub enum ObjectPattern {
     Literal(String),
     Cons { cons : String, params : Vec<ObjectPattern> },
     Tuple(Vec<ObjectPattern>),
+    At { name : String, pattern : Box<ObjectPattern> },
     /*List(Vec<Pattern>, Option<Box<Pattern>>), 
-    structure
-    At(String, Box<Pattern>),*/
+    structure*/
 }
 
 impl<'a> Linearizable<'a> for ObjectPattern {
@@ -29,6 +29,7 @@ impl<'a> Linearizable<'a> for ObjectPattern {
             ObjectPattern::Literal(_) => vec![],
             ObjectPattern::Cons { params, .. } => params.iter().collect::<Vec<_>>(),
             ObjectPattern::Tuple ( params ) => params.iter().collect::<Vec<_>>(),
+            ObjectPattern::At { pattern, .. } => vec![pattern],
         }
     }
 }

@@ -26,6 +26,7 @@ pub fn parse_object_pattern<'a>( input : (impl Iterator<Item = &'a TokenTree> + 
     Ok(pats)
 }
 
+pred!(at<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '@', _ => false });
 pred!(comma<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == ',', _ => false });
 pred!(semi_colon<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == ';', _ => false });
 group!(arrow<'a>: &'a TokenTree => () = |input| {
@@ -51,6 +52,17 @@ group!(dot_dot<'a>: &'a TokenTree => ObjectPattern = |input| {
 });
 
 group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
+
+    seq!(at_pat<'a>: &'a TokenTree => ObjectPattern = ident <= TokenTree::Ident(_), at, pattern <= ! internal_option, {
+        if let TokenTree::Ident(name) = ident {
+            let name = name.to_string();
+            let pattern = Box::new(pattern);
+            ObjectPattern::At { name, pattern }
+        }
+        else {
+            unreachable!()
+        }
+    });
 
     pred!(wild<'a>: &'a TokenTree => ObjectPattern = |x| match x { TokenTree::Ident(n) => n.to_string() == "_", _ => false } => {
         ObjectPattern::Wild
@@ -143,20 +155,23 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
 
     alt!(cons<'a>: &'a TokenTree => ObjectPattern = cons_with_param | cons_alone);
 
-    alt!(internal_option<'a>: &'a TokenTree => ObjectPattern = wild
+    alt!(internal_option<'a>: &'a TokenTree => ObjectPattern = at_pat
+                                                             | wild
                                                              | literal 
                                                              | bang
                                                              | cons
                                                              | tuple
                                                              );
 
-    alt!(last_option<'a>: &'a TokenTree => ObjectPattern = wild
+    alt!(last_option<'a>: &'a TokenTree => ObjectPattern = at_pat
+                                                         | wild
                                                          | literal 
                                                          | cons
                                                          | tuple
                                                          );
 
     alt!(leading_option<'a>: &'a TokenTree => ObjectPattern = bang
+                                                            | at_pat
                                                             | cons
                                                             | tuple
                                                             );
