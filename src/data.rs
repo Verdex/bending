@@ -16,20 +16,23 @@ pub enum ObjectPattern {
     Cons { cons : String, params : Vec<ObjectPattern> },
     Tuple(Vec<ObjectPattern>),
     At { name : String, pattern : Box<ObjectPattern> },
+    RangeInclusive { start : String, end : String },
     /*List(Vec<Pattern>, Option<Box<Pattern>>), 
     structure*/
 }
 
 impl<'a> Linearizable<'a> for ObjectPattern {
     fn l_next(&'a self) -> Vec<&'a Self> {
+        use ObjectPattern::*;
         match self {
-            ObjectPattern::Wild => vec![],
-            ObjectPattern::Rest => vec![],
-            ObjectPattern::Next => vec![],
-            ObjectPattern::Literal(_) => vec![],
-            ObjectPattern::Cons { params, .. } => params.iter().collect::<Vec<_>>(),
-            ObjectPattern::Tuple ( params ) => params.iter().collect::<Vec<_>>(),
-            ObjectPattern::At { pattern, .. } => vec![pattern],
+            Wild => vec![],
+            Rest => vec![],
+            Next => vec![],
+            Literal(_) => vec![],
+            Cons { params, .. } => params.iter().collect::<Vec<_>>(),
+            Tuple ( params ) => params.iter().collect::<Vec<_>>(),
+            At { pattern, .. } => vec![pattern],
+            RangeInclusive { .. } => vec![],
         }
     }
 }

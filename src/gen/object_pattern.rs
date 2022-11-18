@@ -20,17 +20,19 @@ fn obj_pat_match(pat : String, next : String, prev_names : &Vec<String>) -> Stri
 }
 
 fn obj_pat_to_string(input : &ObjectPattern, next_names : &mut Vec<String>) -> String {
+    use ObjectPattern::*;
     match input {
-        ObjectPattern::Wild => "_".into(),
-        ObjectPattern::Rest => "..".into(),
-        ObjectPattern::Next => next_names.pop().expect("ran out of next_names while building object pattern").into(),
-        ObjectPattern::Literal(l) => l.clone(),
-        ObjectPattern::Cons { cons, params } if params.len() == 0 => cons.clone(),
-        ObjectPattern::Cons { cons, params } => format!("{}({})", cons.clone(), 
+        Wild => "_".into(),
+        Rest => "..".into(),
+        Next => next_names.pop().expect("ran out of next_names while building object pattern").into(),
+        Literal(l) => l.clone(),
+        Cons { cons, params } if params.len() == 0 => cons.clone(),
+        Cons { cons, params } => format!("{}({})", cons.clone(), 
             params.iter().map(|x| obj_pat_to_string(x, next_names)).collect::<Vec<_>>().join(", ")),
-        ObjectPattern::Tuple ( params ) => format!("({})",  
+        Tuple ( params ) => format!("({})",  
             params.iter().map(|x| obj_pat_to_string(x, next_names)).collect::<Vec<_>>().join(", ")),
-        ObjectPattern::At { name, pattern } => format!("{} @ {}", name, obj_pat_to_string(pattern, next_names)),
+        At { name, pattern } => format!("{} @ {}", name, obj_pat_to_string(pattern, next_names)),
+        RangeInclusive { start, end } => format!("{}..={}", start, end),
     }
 }
 

@@ -26,6 +26,7 @@ pub fn parse_object_pattern<'a>( input : (impl Iterator<Item = &'a TokenTree> + 
     Ok(pats)
 }
 
+pred!(equal<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '=', _ => false });
 pred!(at<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '@', _ => false });
 pred!(comma<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == ',', _ => false });
 pred!(semi_colon<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == ';', _ => false });
@@ -52,6 +53,20 @@ group!(dot_dot<'a>: &'a TokenTree => ObjectPattern = |input| {
 });
 
 group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
+
+    group!(range<'a>: &'a TokenTree => ObjectPattern = |input| {
+        seq!(range_inclusive<'a>: &'a TokenTree => ObjectPattern = s <= TokenTree::Literal(_), dot_dot, ! equal, e <= ! TokenTree::Literal(_), {
+            if let (TokenTree::Literal(start), TokenTree::Literal(end)) = (s, e) {
+                let start = start.to_string();
+                let end = end.to_string();
+                ObjectPattern::RangeInclusive { start, end }
+            }
+            else {
+                unreachable!();
+            }
+        });
+        range_inclusive(input)
+    });
 
     seq!(at_pat<'a>: &'a TokenTree => ObjectPattern = ident <= TokenTree::Ident(_), at, pattern <= ! internal_option, {
         if let TokenTree::Ident(name) = ident {
@@ -157,6 +172,7 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
 
     alt!(internal_option<'a>: &'a TokenTree => ObjectPattern = at_pat
                                                              | wild
+                                                             | range
                                                              | literal 
                                                              | bang
                                                              | cons
@@ -165,6 +181,7 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
 
     alt!(last_option<'a>: &'a TokenTree => ObjectPattern = at_pat
                                                          | wild
+                                                         | range
                                                          | literal 
                                                          | cons
                                                          | tuple
