@@ -30,13 +30,10 @@ pred!(equal<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char(
 pred!(at<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '@', _ => false });
 pred!(comma<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == ',', _ => false });
 pred!(semi_colon<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == ';', _ => false });
+
 group!(arrow<'a>: &'a TokenTree => () = |input| {
-
-    pred!(equal<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '=', _ => false });
     pred!(greater<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '>', _ => false });
-
     seq!(main<'a>: &'a TokenTree => () = equal, ! greater, { () });
-
     main(input)
 });
 
