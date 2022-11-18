@@ -75,7 +75,6 @@ match _ {
     [P, P] => 
     [P, ..] =>
     [P, a @ ..] =>
-    P if pred =>
     & name =>
     ! & name =>
 }
@@ -85,5 +84,4 @@ match _ {
 
 // .. in tuples, structs, list
 // |
-// if
 // & pattern
