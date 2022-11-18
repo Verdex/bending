@@ -67,9 +67,6 @@ going to be potentially returning the same inner parts of the data many times
 
 match _ {
     1 | 2 => 
-    1..2 =>
-    1..=2 =>
-    a @ _ =>
     Blah { a : P } => 
     Blah { a : P, .. } => 
     [] =>
@@ -84,10 +81,7 @@ match _ {
 
 */
 
-// ranges
 // .. in tuples, structs, list
 // |
-// namespaces 
 // if
 // & pattern
-// ! pattern
