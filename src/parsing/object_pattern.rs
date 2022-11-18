@@ -190,9 +190,28 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
                                                             | tuple
                                                             );
 
-    seq!(option_semi<'a>: &'a TokenTree => ObjectPattern = o <= leading_option, semi_colon, { o });
+    seq!(option_semi<'a>: &'a TokenTree => ObjectPattern = o <= leading_option
+                                                         , maybe_if <= ? TokenTree::Group(_)
+                                                         , semi_colon
+                                                         , { 
+        match maybe_if {
+            Some(TokenTree::Group(g)) => 
+                ObjectPattern::If { condition: g.to_string(), pattern: Box::new(o) },
+            Some(_) => unreachable!(),
+            None => o,
+        }
+    });
     
-    seq!(options<'a>: &'a TokenTree => Vec<ObjectPattern> = os <= * option_semi, o <= ! last_option, {
+    seq!(options<'a>: &'a TokenTree => Vec<ObjectPattern> = os <= * option_semi
+                                                          , o <= ! last_option
+                                                          , maybe_if <= ? TokenTree::Group(_)
+                                                          , {
+        let o = match maybe_if {
+            Some(TokenTree::Group(g)) => 
+                ObjectPattern::If { condition: g.to_string(), pattern: Box::new(o) },
+            Some(_) => unreachable!(),
+            None => o,
+        };
         let mut os = os;
         os.push(o);
         os

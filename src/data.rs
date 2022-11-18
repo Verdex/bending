@@ -17,6 +17,7 @@ pub enum ObjectPattern {
     Tuple(Vec<ObjectPattern>),
     At { name : String, pattern : Box<ObjectPattern> },
     RangeInclusive { start : String, end : String },
+    If { pattern : Box<ObjectPattern>, condition : String },
     /*List(Vec<Pattern>, Option<Box<Pattern>>), 
     structure*/
 }
@@ -33,6 +34,7 @@ impl<'a> Linearizable<'a> for ObjectPattern {
             Tuple ( params ) => params.iter().collect::<Vec<_>>(),
             At { pattern, .. } => vec![pattern],
             RangeInclusive { .. } => vec![],
+            If { pattern, .. } => vec![pattern],
         }
     }
 }
