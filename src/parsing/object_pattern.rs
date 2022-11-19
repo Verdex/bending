@@ -65,7 +65,7 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
         range_inclusive(input)
     });
 
-    seq!(at_pat<'a>: &'a TokenTree => ObjectPattern = ident <= TokenTree::Ident(_), at, pattern <= ! internal_option, {
+    seq!(at_pat<'a>: &'a TokenTree => ObjectPattern = ident <= TokenTree::Ident(_), at, pattern <= ! option, {
         if let TokenTree::Ident(name) = ident {
             let name = name.to_string();
             let pattern = Box::new(pattern);
@@ -117,7 +117,7 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
     });
 
     group!(params<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
-        alt!(opts<'a>: &'a TokenTree => ObjectPattern = internal_option | dot_dot);
+        alt!(opts<'a>: &'a TokenTree => ObjectPattern = option | dot_dot);
         seq!(pat_comma<'a>: &'a TokenTree => ObjectPattern = pat <= opts, comma, { pat });
         seq!(pat_list<'a>: &'a TokenTree => Vec<ObjectPattern> = first <= * pat_comma, last <= ! opts, {
             let mut first = first;
@@ -167,30 +167,16 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
 
     alt!(cons<'a>: &'a TokenTree => ObjectPattern = cons_with_param | cons_alone);
 
-    alt!(internal_option<'a>: &'a TokenTree => ObjectPattern = at_pat
-                                                             | wild
-                                                             | range
-                                                             | literal 
-                                                             | bang
-                                                             | cons
-                                                             | tuple
-                                                             );
+    alt!(option<'a>: &'a TokenTree => ObjectPattern = at_pat 
+                                                    | wild
+                                                    | range
+                                                    | literal
+                                                    | bang
+                                                    | cons
+                                                    | tuple
+                                                    );
 
-    alt!(last_option<'a>: &'a TokenTree => ObjectPattern = at_pat
-                                                         | wild
-                                                         | range
-                                                         | literal 
-                                                         | cons
-                                                         | tuple
-                                                         );
-
-    alt!(leading_option<'a>: &'a TokenTree => ObjectPattern = bang
-                                                            | at_pat
-                                                            | cons
-                                                            | tuple
-                                                            );
-
-    seq!(option_semi<'a>: &'a TokenTree => ObjectPattern = o <= leading_option
+    seq!(option_semi<'a>: &'a TokenTree => ObjectPattern = o <= option
                                                          , maybe_if <= ? TokenTree::Group(_)
                                                          , semi_colon
                                                          , { 
@@ -203,7 +189,7 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
     });
     
     seq!(options<'a>: &'a TokenTree => Vec<ObjectPattern> = os <= * option_semi
-                                                          , o <= ! last_option
+                                                          , o <= ! option
                                                           , maybe_if <= ? TokenTree::Group(_)
                                                           , {
         let o = match maybe_if {
