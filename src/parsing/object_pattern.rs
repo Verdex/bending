@@ -26,6 +26,7 @@ pub fn parse_object_pattern<'a>( input : (impl Iterator<Item = &'a TokenTree> + 
     Ok(pats)
 }
 
+pred!(or<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '|', _ => false });
 pred!(equal<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '=', _ => false });
 pred!(at<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '@', _ => false });
 pred!(comma<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == ',', _ => false });
@@ -167,14 +168,29 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
 
     alt!(cons<'a>: &'a TokenTree => ObjectPattern = cons_with_param | cons_alone);
 
-    alt!(option<'a>: &'a TokenTree => ObjectPattern = at_pat 
-                                                    | wild
-                                                    | range
-                                                    | literal
-                                                    | bang
-                                                    | cons
-                                                    | tuple
-                                                    );
+    group!(option<'a>: &'a TokenTree => ObjectPattern = |input| {
+        alt!(item<'a>: &'a TokenTree => ObjectPattern = at_pat 
+                                                      | wild
+                                                      | range
+                                                      | literal
+                                                      | bang
+                                                      | cons
+                                                      | tuple
+                                                      );
+
+        seq!(item_or<'a>: &'a TokenTree => ObjectPattern = x <= item, or, { x });
+        seq!(main<'a>: &'a TokenTree => ObjectPattern = items <= * item_or
+                                                      , last <= ! item
+                                                      , {
+
+            let mut items = items;
+            items.push(last);
+
+            ObjectPattern::Or(items)
+        });
+        
+        main(input)
+    });
 
     seq!(option_semi<'a>: &'a TokenTree => ObjectPattern = o <= option
                                                          , maybe_if <= ? TokenTree::Group(_)

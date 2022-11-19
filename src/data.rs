@@ -18,6 +18,7 @@ pub enum ObjectPattern {
     At { name : String, pattern : Box<ObjectPattern> },
     RangeInclusive { start : String, end : String },
     If { pattern : Box<ObjectPattern>, condition : String },
+    Or(Vec<ObjectPattern>),
     /*List(Vec<Pattern>, Option<Box<Pattern>>), 
     structure*/
 }
@@ -35,6 +36,7 @@ impl<'a> Linearizable<'a> for ObjectPattern {
             At { pattern, .. } => vec![pattern],
             RangeInclusive { .. } => vec![],
             If { pattern, .. } => vec![pattern],
+            Or(pats) => pats.iter().collect::<Vec<_>>(),
         }
     }
 }
@@ -68,7 +70,6 @@ going to be potentially returning the same inner parts of the data many times
         so mutating it isn't going to be an option
 
 match _ {
-    1 | 2 => 
     Blah { a : P } => 
     Blah { a : P, .. } => 
     [] =>
@@ -83,5 +84,4 @@ match _ {
 */
 
 // .. in tuples, structs, list
-// |
 // & pattern
