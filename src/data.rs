@@ -19,8 +19,7 @@ pub enum ObjectPattern {
     RangeInclusive { start : String, end : String },
     If { pattern : Box<ObjectPattern>, condition : String },
     Or(Vec<ObjectPattern>),
-    /*List(Vec<Pattern>, Option<Box<Pattern>>), 
-    structure*/
+    Struct { name: String, fields : Vec<(String, ObjectPattern)>, rest : bool },
 }
 
 impl<'a> Linearizable<'a> for ObjectPattern {
@@ -37,6 +36,7 @@ impl<'a> Linearizable<'a> for ObjectPattern {
             RangeInclusive { .. } => vec![],
             If { pattern, .. } => vec![pattern],
             Or(pats) => pats.iter().collect::<Vec<_>>(),
+            Struct { fields, .. } => fields.iter().map(|x| &x.1).collect::<Vec<_>>(),
         }
     }
 }

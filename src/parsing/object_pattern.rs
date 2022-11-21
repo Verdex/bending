@@ -26,6 +26,7 @@ pub fn parse_object_pattern<'a>( input : (impl Iterator<Item = &'a TokenTree> + 
     Ok(pats)
 }
 
+pred!(colon<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == ':', _ => false });
 pred!(or<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '|', _ => false });
 pred!(equal<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '=', _ => false });
 pred!(at<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '@', _ => false });
@@ -51,6 +52,92 @@ group!(dot_dot<'a>: &'a TokenTree => ObjectPattern = |input| {
 });
 
 group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
+
+    group!(structure<'a>: &'a TokenTree => ObjectPattern = |input| {
+
+        seq!( name<'a>: &'a TokenTree => String 
+            = ident <= TokenTree::Ident(_) 
+            , {
+                if let TokenTree::Ident(ident) = ident {
+                    ident.to_string()
+                }
+                else {
+                    unreachable!();
+                }
+            });
+
+        group!(structure_fields<'a>: &'a TokenTree => (Vec<(String, ObjectPattern)>, bool) = |input| {
+            seq!(extract<'a>: &'a TokenTree => Option<TokenStream> = group <= TokenTree::Group(_), {
+                if let TokenTree::Group(g) = group {
+                    if g.delimiter() == Delimiter::Brace {
+                        Some(g.stream())
+                    }
+                    else {
+                        None
+                    }
+                }
+                else { 
+                    unreachable!();
+                }
+            });
+
+            seq!(field<'a>: &'a TokenTree => (String, ObjectPattern) 
+                = ident <= TokenTree::Ident(_)
+                , colon
+                , opt <= option
+                , { 
+                    
+                    if let TokenTree::Ident(ident) = ident {
+                        let name = ident.to_string();
+                        (name, opt)
+                    }
+                    else {
+                        unreachable!();
+                    }
+                });
+
+            seq!(field_comma<'a>: &'a TokenTree => (String, ObjectPattern) 
+                = f <= field
+                , comma
+                , { f });
+
+            seq!( fields<'a>: &'a TokenTree => (Vec<(String, ObjectPattern)>, bool) 
+                = fs <= * field_comma
+                , f <= field
+                , r <= ? dot_dot
+                , { 
+                    let mut fs = fs;
+                    fs.push(f);
+                    (fs, matches!(r, Some(_)))
+                });
+            
+            let group = match extract(input)? {
+                Some(g) => g,
+                None => { return Err(MatchError::ErrorEndOfFile); },
+            };
+
+            let input = group.into_iter().collect::<Vec<TokenTree>>();
+
+            if input.len() == 0 {
+                Err(MatchError::FatalEndOfFile)
+            }
+            else {
+                let mut input = input.iter().enumerate();
+                let (fs, rest) = fields(&mut input)?;
+                Ok((fs, rest))
+            }
+        });
+
+        seq!( main<'a>: &'a TokenTree => ObjectPattern 
+            = n <= name 
+            , fs <= structure_fields 
+            , {
+                let (fields, rest) = fs;
+                ObjectPattern::Struct { name: n, fields, rest }
+            });
+        
+        main(input)
+    });
 
     group!(range<'a>: &'a TokenTree => ObjectPattern = |input| {
         seq!(range_inclusive<'a>: &'a TokenTree => ObjectPattern = s <= TokenTree::Literal(_), dot_dot, ! equal, e <= ! TokenTree::Literal(_), {
@@ -142,7 +229,7 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
 
         let group = match extract(input)? {
             Some(g) => g,
-            None => { return Err(MatchError::FatalEndOfFile); },
+            None => { return Err(MatchError::ErrorEndOfFile); },
         };
 
         let input = group.into_iter().collect::<Vec<TokenTree>>();
@@ -172,6 +259,7 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
         alt!(item<'a>: &'a TokenTree => ObjectPattern = at_pat 
                                                       | wild
                                                       | range
+                                                      | structure
                                                       | literal
                                                       | bang
                                                       | cons
