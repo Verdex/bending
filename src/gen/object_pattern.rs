@@ -39,7 +39,12 @@ fn obj_pat_to_string(input : &ObjectPattern, next_names : &mut Vec<String>) -> S
         Struct { name, fields, rest: true } => {
             let fields = fields.iter().map(|(name, pat)| format!("{} : {}", name, obj_pat_to_string(pat, next_names)))
                                .collect::<Vec<_>>().join(", ");
-            format!("{} {{ {}, .. }}", name, fields)
+            if fields.len() != 0 {
+                format!("{} {{ {}, .. }}", name, fields)
+            }
+            else {
+                format!("{} {{ .. }}", name)
+            }
         },
         Struct { name, fields, rest: false } => {
             let fields = fields.iter().map(|(name, pat)| format!("{} : {}", name, obj_pat_to_string(pat, next_names)))
