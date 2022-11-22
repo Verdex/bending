@@ -145,7 +145,13 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
             else {
                 let mut input = input.iter().enumerate();
                 let (fs, rest) = fields(&mut input)?;
-                Ok((fs, rest))
+
+                if input.count() != 0 {
+                    Err(MatchError::FatalEndOfFile)
+                }
+                else {
+                    Ok((fs, rest))
+                }
             }
         });
 
