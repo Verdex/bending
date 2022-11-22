@@ -81,7 +81,20 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
                 }
             });
 
-            seq!(field<'a>: &'a TokenTree => (String, ObjectPattern) 
+            seq!(field_alone<'a>: &'a TokenTree => (String, ObjectPattern) 
+                = ident <= TokenTree::Ident(_)
+                , { 
+                    
+                    if let TokenTree::Ident(ident) = ident {
+                        let name = ident.to_string();
+                        (name.clone(), ObjectPattern::Literal(name))
+                    }
+                    else {
+                        unreachable!();
+                    }
+                });
+
+            seq!(field_with_pattern<'a>: &'a TokenTree => (String, ObjectPattern) 
                 = ident <= TokenTree::Ident(_)
                 , colon
                 , opt <= option
@@ -96,20 +109,28 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
                     }
                 });
 
+            alt!(field<'a>: &'a TokenTree => (String, ObjectPattern) = field_with_pattern | field_alone);
+
             seq!(field_comma<'a>: &'a TokenTree => (String, ObjectPattern) 
                 = f <= field
                 , comma
                 , { f });
 
-            seq!( fields<'a>: &'a TokenTree => (Vec<(String, ObjectPattern)>, bool) 
+            seq!( fields_with_rest<'a>: &'a TokenTree => (Vec<(String, ObjectPattern)>, bool) 
+                = fs <= * field_comma
+                , dot_dot
+                , { (fs, true) });
+
+            seq!( fields_alone<'a>: &'a TokenTree => (Vec<(String, ObjectPattern)>, bool) 
                 = fs <= * field_comma
                 , f <= field
-                , r <= ? dot_dot
                 , { 
                     let mut fs = fs;
                     fs.push(f);
-                    (fs, matches!(r, Some(_)))
+                    (fs, false)
                 });
+            
+            alt!( fields<'a>: &'a TokenTree => (Vec<(String, ObjectPattern)>, bool) = fields_with_rest | fields_alone );
             
             let group = match extract(input)? {
                 Some(g) => g,
