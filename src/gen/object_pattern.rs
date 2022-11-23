@@ -51,6 +51,8 @@ fn obj_pat_to_string(input : &ObjectPattern, next_names : &mut Vec<String>) -> S
                                .collect::<Vec<_>>().join(", ");
             format!("{} {{ {} }}", name, fields)
         },
+        List ( items ) => format!("[{}]",  
+            items.iter().map(|x| obj_pat_to_string(x, next_names)).collect::<Vec<_>>().join(", ")),
     }
 }
 
@@ -71,7 +73,6 @@ pub fn object_pattern_matcher(g : &mut GenSym, input : ObjPatsAct) -> String {
 
         let cur_pat_as_string = obj_pat_to_string(cur_pat.as_ref().unwrap(), &mut cur_names);
         next = obj_pat_match(cur_pat_as_string, next, &prev_names);
-        println!("next = {}", next); // TODO:  remove
         names = prev_names;
     }
 

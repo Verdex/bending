@@ -19,7 +19,6 @@ pub fn object_pattern(input : TokenStream) -> TokenStream {
     let mut g = GenSym::new();
 
     let o = object_pattern_matcher(&mut g, obj_pat_with_action);
-    println!("output = {}", o);
 
     o.parse().unwrap()
 }

@@ -20,6 +20,7 @@ pub enum ObjectPattern {
     If { pattern : Box<ObjectPattern>, condition : String },
     Or(Vec<ObjectPattern>),
     Struct { name: String, fields : Vec<(String, ObjectPattern)>, rest : bool },
+    List(Vec<ObjectPattern>),
 }
 
 impl<'a> Linearizable<'a> for ObjectPattern {
@@ -37,6 +38,7 @@ impl<'a> Linearizable<'a> for ObjectPattern {
             If { pattern, .. } => vec![pattern],
             Or(pats) => pats.iter().collect::<Vec<_>>(),
             Struct { fields, .. } => fields.iter().map(|x| &x.1).collect::<Vec<_>>(),
+            List(items) => items.iter().collect::<Vec<_>>(),
         }
     }
 }

@@ -54,6 +54,65 @@ group!(dot_dot<'a>: &'a TokenTree => ObjectPattern = |input| {
 
 group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
 
+    group!(list<'a>: &'a TokenTree => ObjectPattern = |input| {
+        seq!(extract<'a>: &'a TokenTree => Option<TokenStream> = group <= TokenTree::Group(_), {
+            if let TokenTree::Group(g) = group {
+                if g.delimiter() == Delimiter::Bracket {
+                    Some(g.stream())
+                }
+                else {
+                    None
+                }
+            }
+            else { 
+                unreachable!();
+            }
+        });
+
+        seq!( at_dot_dot<'a>: &'a TokenTree => ObjectPattern 
+            = ident <= TokenTree::Ident(_), at, dot_dot, {
+
+            if let TokenTree::Ident(name) = ident {
+                let name = name.to_string();
+                ObjectPattern::At { name, pattern: Box::new(ObjectPattern::Rest) }
+            }
+            else {
+                unreachable!()
+            }
+        });
+
+
+        alt!(item<'a>: &'a TokenTree => ObjectPattern = dot_dot | at_dot_dot | option );
+        seq!(item_comma<'a>: &'a TokenTree => ObjectPattern = i <= item, comma, { i });
+        seq!(items<'a>: &'a TokenTree => Vec<ObjectPattern> = xs <= * item_comma, x <= ! item, {
+            let mut xs = xs;
+            xs.push(x);
+            xs
+        });
+
+        let group = match extract(input)? {
+            Some(g) => g,
+            None => { return Err(MatchError::ErrorEndOfFile); },
+        };
+
+        let input = group.into_iter().collect::<Vec<TokenTree>>();
+
+        if input.len() == 0 {
+            Ok(ObjectPattern::List(vec![]))
+        }
+        else {
+            let mut input = input.iter().enumerate();
+            let items = items(&mut input)?;
+
+            if input.count() != 0 {
+                Err(MatchError::FatalEndOfFile)
+            }
+            else {
+                Ok(ObjectPattern::List(items))
+            }
+        }
+    });
+
     group!(literal<'a>: &'a TokenTree => ObjectPattern = |input| {
         seq!( literal_alone<'a>: &'a TokenTree => ObjectPattern
             = lit <= TokenTree::Literal(_)
@@ -317,6 +376,7 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
                                                       | bang
                                                       | cons
                                                       | tuple
+                                                      | list
                                                       );
 
         seq!(item_or<'a>: &'a TokenTree => ObjectPattern = x <= item, or, { x });
