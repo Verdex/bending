@@ -70,7 +70,6 @@ going to be potentially returning the same inner parts of the data many times
         so mutating it isn't going to be an option
 
 match _ {
-    -4 => 
     [] =>
     [P, P] => 
     [P, ..] =>
