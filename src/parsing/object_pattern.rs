@@ -32,6 +32,7 @@ pred!(equal<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char(
 pred!(at<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '@', _ => false });
 pred!(comma<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == ',', _ => false });
 pred!(semi_colon<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == ';', _ => false });
+pred!(minus<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '-', _ => false });
 
 group!(arrow<'a>: &'a TokenTree => () = |input| {
     pred!(greater<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '>', _ => false });
@@ -52,6 +53,34 @@ group!(dot_dot<'a>: &'a TokenTree => ObjectPattern = |input| {
 });
 
 group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
+
+    group!(literal<'a>: &'a TokenTree => ObjectPattern = |input| {
+        seq!( literal_alone<'a>: &'a TokenTree => ObjectPattern
+            = lit <= TokenTree::Literal(_)
+            , {
+                if let TokenTree::Literal(lit) = lit {
+                    ObjectPattern::Literal(lit.to_string())
+                }
+                else {
+                    unreachable!();
+                }
+            });
+        seq!( minus_literal<'a>: &'a TokenTree => ObjectPattern
+            = minus
+            , lit <= ! TokenTree::Literal(_)
+            , {
+                if let TokenTree::Literal(lit) = lit {
+                    ObjectPattern::Literal(format!("-{}", lit.to_string()))
+                }
+                else {
+                    unreachable!();
+                }
+            });
+
+        alt!(main<'a>: &'a TokenTree => ObjectPattern = literal_alone | minus_literal);
+
+        main(input)
+    });
 
     group!(structure<'a>: &'a TokenTree => ObjectPattern = |input| {
 
@@ -167,10 +196,8 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
     });
 
     group!(range<'a>: &'a TokenTree => ObjectPattern = |input| {
-        seq!(range_inclusive<'a>: &'a TokenTree => ObjectPattern = s <= TokenTree::Literal(_), dot_dot, ! equal, e <= ! TokenTree::Literal(_), {
-            if let (TokenTree::Literal(start), TokenTree::Literal(end)) = (s, e) {
-                let start = start.to_string();
-                let end = end.to_string();
+        seq!(range_inclusive<'a>: &'a TokenTree => ObjectPattern = s <= literal, dot_dot, ! equal, e <= ! literal, {
+            if let (ObjectPattern::Literal(start), ObjectPattern::Literal(end)) = (s, e) {
                 ObjectPattern::RangeInclusive { start, end }
             }
             else {
@@ -197,15 +224,6 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
 
     pred!(bang<'a>: &'a TokenTree => ObjectPattern = |x| match x { TokenTree::Punct(p) => p.as_char() == '!',  _ => false } => {
         ObjectPattern::Next
-    });
-
-    seq!(literal<'a>: &'a TokenTree => ObjectPattern = lit <= TokenTree::Literal(_), { 
-        if let TokenTree::Literal(lit) = lit {
-            ObjectPattern::Literal(lit.to_string())
-        }
-        else {
-            unreachable!()
-        }
     });
 
     seq!(ident_colon_colon<'a>: &'a TokenTree => String = ident <= TokenTree::Ident(_), colon_colon, {
