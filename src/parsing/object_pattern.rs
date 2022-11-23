@@ -33,6 +33,7 @@ pred!(at<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() =
 pred!(comma<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == ',', _ => false });
 pred!(semi_colon<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == ';', _ => false });
 pred!(minus<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '-', _ => false });
+pred!(question<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '?', _ => false });
 
 group!(arrow<'a>: &'a TokenTree => () = |input| {
     pred!(greater<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '>', _ => false });
@@ -393,8 +394,10 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
         main(input)
     });
 
+    seq!(condition<'a>: &'a TokenTree => &'a TokenTree = question, tt <= ! TokenTree::Group(_), { tt });
+
     seq!(option_semi<'a>: &'a TokenTree => ObjectPattern = o <= option
-                                                         , maybe_if <= ? TokenTree::Group(_)
+                                                         , maybe_if <= ? condition 
                                                          , semi_colon
                                                          , { 
         match maybe_if {
@@ -407,7 +410,7 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
     
     seq!(options<'a>: &'a TokenTree => Vec<ObjectPattern> = os <= * option_semi
                                                           , o <= ! option
-                                                          , maybe_if <= ? TokenTree::Group(_)
+                                                          , maybe_if <= ? condition
                                                           , {
         let o = match maybe_if {
             Some(TokenTree::Group(g)) => 
