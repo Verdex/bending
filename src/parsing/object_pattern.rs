@@ -26,6 +26,7 @@ pub fn parse_object_pattern<'a>( input : (impl Iterator<Item = &'a TokenTree> + 
     Ok(pats)
 }
 
+pred!(and<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '&', _ => false });
 pred!(colon<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == ':', _ => false });
 pred!(or<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '|', _ => false });
 pred!(equal<'a>: &'a TokenTree = |x| match x { TokenTree::Punct(p) => p.as_char() == '=', _ => false });
@@ -394,30 +395,61 @@ group!(object_pattern<'a>: &'a TokenTree => Vec<ObjectPattern> = |input| {
         main(input)
     });
 
-    seq!(condition<'a>: &'a TokenTree => &'a TokenTree = question, tt <= ! TokenTree::Group(_), { tt });
+    seq!(condition<'a>: &'a TokenTree => String = question, tt <= ! TokenTree::Group(_), { tt.to_string() });
+
+    seq!(execute<'a>: &'a TokenTree => String = and, tt <= ! TokenTree::Group(_), {
+        if let TokenTree::Group(g) = tt {
+            g.stream().to_string()
+        }
+        else {
+            unreachable!();
+        }
+    });
 
     seq!(option_semi<'a>: &'a TokenTree => ObjectPattern = o <= option
                                                          , maybe_if <= ? condition 
+                                                         , maybe_execute <= ? execute
                                                          , semi_colon
                                                          , { 
-        match maybe_if {
-            Some(TokenTree::Group(g)) => 
-                ObjectPattern::If { condition: g.to_string(), pattern: Box::new(o) },
-            Some(_) => unreachable!(),
-            None => o,
+        match (maybe_if, maybe_execute) {
+            (Some(condition), Some(action)) => 
+                ObjectPattern::Execute { 
+                    action, 
+                    pattern: Box::new(ObjectPattern::If { condition, pattern: Box::new(o) }),
+                },
+            (Some(condition), None) => 
+                ObjectPattern::If { condition, pattern: Box::new(o) },
+            (None, Some(action)) => 
+                ObjectPattern::Execute { 
+                    action,
+                    pattern: Box::new(o),
+                },
+            (None, None) => o,
         }
     });
     
     seq!(options<'a>: &'a TokenTree => Vec<ObjectPattern> = os <= * option_semi
                                                           , o <= ! option
                                                           , maybe_if <= ? condition
+                                                          , maybe_execute <= ? execute
                                                           , {
-        let o = match maybe_if {
-            Some(TokenTree::Group(g)) => 
-                ObjectPattern::If { condition: g.to_string(), pattern: Box::new(o) },
-            Some(_) => unreachable!(),
-            None => o,
+
+        let o = match (maybe_if, maybe_execute) {
+            (Some(condition), Some(action)) => 
+                ObjectPattern::Execute { 
+                    action,
+                    pattern: Box::new(ObjectPattern::If { condition, pattern: Box::new(o) }),
+                },
+            (Some(condition), None) => 
+                ObjectPattern::If { condition, pattern: Box::new(o) },
+            (None, Some(action)) => 
+                ObjectPattern::Execute { 
+                    action,
+                    pattern: Box::new(o),
+                },
+            (None, None) => o,
         };
+
         let mut os = os;
         os.push(o);
         os
