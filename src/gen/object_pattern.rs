@@ -6,7 +6,7 @@ use crate::data::*;
 fn obj_pat_match(pat : String, next : String, prev_names : &Vec<String>) -> String {
     prev_names.iter().map(|prev_name| 
         format!("
-        match {name} {{
+        match {name}.borrow() {{
             {pat} => {{ 
                 {next} 
             }},
@@ -87,6 +87,7 @@ pub fn object_pattern_matcher(g : &mut GenSym, input : ObjPatsAct) -> String {
 
     format!("
     |gen_sym_input| {{
+        use std::borrow::Borrow;
         let mut ret = vec![];
         {}
         ret
