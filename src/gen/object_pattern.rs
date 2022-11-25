@@ -73,9 +73,16 @@ pub fn object_pattern_matcher(g : &mut GenSym, input : ObjPatsAct) -> String {
                 None => vec!["gen_sym_input".into()],
             };
 
-        let cur_pat_as_string = obj_pat_to_string(cur_pat.as_ref().unwrap(), &mut cur_names);
-        next = obj_pat_match(cur_pat_as_string, next, &prev_names);
-        names = prev_names;
+        if let Some(ObjectPattern::Execute { action, pattern }) = cur_pat {
+            let cur_pat_as_string = obj_pat_to_string(pattern, &mut cur_names);
+            next = format!("{}\n{}", action, obj_pat_match(cur_pat_as_string, next, &prev_names));
+            names = prev_names;
+        }
+        else {
+            let cur_pat_as_string = obj_pat_to_string(cur_pat.as_ref().unwrap(), &mut cur_names);
+            next = obj_pat_match(cur_pat_as_string, next, &prev_names);
+            names = prev_names;
+        }
     }
 
     format!("
