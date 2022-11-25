@@ -3,11 +3,12 @@ use denest::*;
 
 use crate::data::*;
 
-fn obj_pat_match(pat : String, next : String, prev_names : &Vec<String>) -> String {
+fn obj_pat_match(pat : String, execute : &str, next : String, prev_names : &Vec<String>) -> String {
     prev_names.iter().map(|prev_name| 
         format!("
         match {name}.borrow() {{
             {pat} => {{ 
+                {execute}
                 {next} 
             }},
             _ => {{}},
@@ -15,6 +16,7 @@ fn obj_pat_match(pat : String, next : String, prev_names : &Vec<String>) -> Stri
         "
         , name = prev_name
         , pat = pat
+        , execute = execute
         , next = next
         )).collect::<String>()
 }
@@ -75,12 +77,12 @@ pub fn object_pattern_matcher(g : &mut GenSym, input : ObjPatsAct) -> String {
 
         if let Some(ObjectPattern::Execute { action, pattern }) = cur_pat {
             let cur_pat_as_string = obj_pat_to_string(pattern, &mut cur_names);
-            next = format!("{}\n{}", action, obj_pat_match(cur_pat_as_string, next, &prev_names));
+            next = obj_pat_match(cur_pat_as_string, action, next, &prev_names);
             names = prev_names;
         }
         else {
             let cur_pat_as_string = obj_pat_to_string(cur_pat.as_ref().unwrap(), &mut cur_names);
-            next = obj_pat_match(cur_pat_as_string, next, &prev_names);
+            next = obj_pat_match(cur_pat_as_string, "", next, &prev_names);
             names = prev_names;
         }
     }
