@@ -21,6 +21,7 @@ pub enum ObjectPattern {
     Or(Vec<ObjectPattern>),
     Struct { name: String, fields : Vec<(String, ObjectPattern)>, rest : bool },
     List(Vec<ObjectPattern>),
+    Execute { pattern : Box<ObjectPattern>, action : String },
 }
 
 impl<'a> Linearizable<'a> for ObjectPattern {
@@ -39,6 +40,7 @@ impl<'a> Linearizable<'a> for ObjectPattern {
             Or(pats) => pats.iter().collect::<Vec<_>>(),
             Struct { fields, .. } => fields.iter().map(|x| &x.1).collect::<Vec<_>>(),
             List(items) => items.iter().collect::<Vec<_>>(),
+            Execute { pattern, .. } => vec![pattern],
         }
     }
 }

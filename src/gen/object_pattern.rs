@@ -53,6 +53,8 @@ fn obj_pat_to_string(input : &ObjectPattern, next_names : &mut Vec<String>) -> S
         },
         List ( items ) => format!("[{}]",  
             items.iter().map(|x| obj_pat_to_string(x, next_names)).collect::<Vec<_>>().join(", ")),
+        // Note:  Execute contents will be thrown before matches and do not resolve to any actual pattern.
+        Execute { .. } => unreachable!(),
     }
 }
 
