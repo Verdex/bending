@@ -31,7 +31,7 @@ Which would otherwise require the nested match statement:
 
 ### Usage 
 
-The `object_pattern` produces anonymous function that takes some type as input and returns a `Vec` of some output.  In most cases you'll either want to or need to assign type information to the output.
+The `object_pattern` macro produces anonymous function that takes some type as input and returns a `Vec` of some output.  In most cases you'll either want to or need to assign type information to the output.
 
     let matcher : for<'a> fn(&'a List<u8>) -> Vec<&'a u8>
         = object_pattern!( Cons(x, _) => { x });
