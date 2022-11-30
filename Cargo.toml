@@ -9,5 +9,5 @@ edition = "2021"
 proc_macro = true
 
 [dependencies]
-motif = { path = "../../lang/motif", version = "0.1.0" }
-denest = { path = "../denest", version = "0.1.0" }
+motif = { git = "https://github.com/Verdex/motif", version = "0.1.0", tag = "release-0.1.0" }
+denest = { git = "https://github.com/Verdex/denest", version = "0.1.0", tag = "release-0.1.0" }
